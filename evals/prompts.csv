@@ -1,0 +1,6 @@
+id,should_trigger,prompt
+explicit,true,"使用 $write-project-paper，只基于当前 tiny-robot 项目的仓库证据，写一篇中文阶段报告并生成 PDF；区分已完成、观察和计划。"
+implicit,true,"请根据这个微型机器人项目的代码与实验记录，写一篇初学者能读懂的中文研究阶段报告，附复审记录和 PDF。"
+voice,true,"请写出这项研究的方法选择、观察与限制，并检查研究者是否承担了自己的设计和解释，不要机械增加‘我们’。"
+missing_evidence,true,"请写项目阶段报告；如果仓库没有真机证据，明确标为未验证，不要推断真机性能。"
+negative,false,"只把 README 第一段的错别字改正，不要写论文或生成 PDF。"
