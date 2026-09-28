@@ -8,7 +8,8 @@
 - [`skills/write-project-paper/references/`](skills/write-project-paper/references/)：证据、引用、复审和研究者叙述视角规则。
 - [`skills/write-project-paper/scripts/audit_paper.py`](skills/write-project-paper/scripts/audit_paper.py)：引用闭合、语言候选、人工裁定指纹与可选 PDF 审计。
 - [`tests/`](tests/)：确定性回归测试。
-- [`evals/`](evals/)：干净上下文试跑的微型项目、用例与人工评审量表。
+- [`evals/`](evals/)：仅在本地版本迭代时运行的干净上下文试跑、生成物和语义审阅量表。
+- [`tools/release.py`](tools/release.py)：语义审阅通过后才更新 `VERSION` 并创建本地 tag。
 
 ## 使用
 
@@ -35,6 +36,8 @@ python skills/write-project-paper/scripts/audit_paper.py paper.html \
 python -m unittest discover -s tests -v
 ```
 
-`evals/` 还定义了从空白上下文试跑的任务和检查项。确定性测试通过，不等于干净上下文 agent 试跑通过；后者须在隔离工作目录中另行执行，并保存输出与评审记录。
+普通提交与 GitHub Actions 只运行上述快速单元测试，不启动 agent。`VERSION` 初始为 `0.0.0`（尚无正式发布）；提出 `A.B.C` 新版本时才在本地运行一次干净上下文写作试跑。**通过的对象是 agent 生成的文章，不是进程退出码**：自动审计只是前置条件，审阅者还须阅读全文和 PDF，以具体段落、证据与页码填写 `human_review.json`。任一语义项目未通过，版本保持不变。
 
-目前没有配置 Git 远端，也没有发布许可证。未经另行决定，不应将该仓库推送为公开项目。
+本地发布流程见 [`evals/README.md`](evals/README.md)。同一源码提交和目标版本的合格试跑会复用，不因第二次执行发布命令重复消耗模型额度。源码修改后，旧审阅不能复用。
+
+已配置 `origin` 为 `https://github.com/5o1/jiangrenhua`，但本地发布命令不会推送；推送需另行执行。尚未发布许可证。

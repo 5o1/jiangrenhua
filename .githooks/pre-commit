@@ -1,0 +1,6 @@
+#!/bin/sh
+# Cheap local check only. The costly cold-context model run is release-only.
+if git diff --cached --quiet -- VERSION; then
+    exit 0
+fi
+python3 tools/release.py --verify-staged
