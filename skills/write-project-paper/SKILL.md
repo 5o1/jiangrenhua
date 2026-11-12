@@ -1,11 +1,15 @@
 ---
 name: write-project-paper
-description: Turn a software, robotics, or embodied-AI project's repository evidence into a beginner-readable Chinese academic paper or stage report, then verify its citations, claims, tutorial, language, and rendered PDF. Use for new papers and substantive revisions; do not use for generic copyediting with no project-evidence work.
+description: Turn a software, robotics, or embodied-AI project's repository evidence into a beginner-readable Chinese academic paper or stage report, then verify its citations, claims, tutorial, language, and the requested output format. Use for new papers and substantive revisions; do not use for generic copyediting with no project-evidence work.
 ---
 
 # 项目论文写作
 
 把仓库、实验记录、代码和外部原始资料整理成可审查的中文论文。论文应帮助没有领域背景的读者理解任务、方法、证据和边界，同时保留复现所需的技术细节。
+
+## 输出格式
+
+遵循用户指定的格式；未指定时沿用项目已有格式，无既有约定时默认 HTML。只有用户明确要求 PDF 时才生成和检查 PDF。仅交付 HTML 时，直接检查 HTML 的内容、链接和浏览器显示；不额外导出 PDF，不安装 PDF 专用依赖，也不因缺少 PDF 阻塞交付。复审记录中将 PDF 专属项标为“不适用”。
 
 ## 先建立证据边界
 
@@ -24,7 +28,7 @@ description: Turn a software, robotics, or embodied-AI project's repository evid
 2. **结构设计**：写出章节顺序，并为每节注明它要回答的问题、依赖的证据以及读者此前必须已经知道的概念。
 3. **正文初稿**：根据证据和结构写作；此阶段不宣称成品已经通过审查。
 4. **四轮人工复审**：严格按“事实与引用 → 初学者阅读连续性 → 方法与复现 → 中文语言与版式”的顺序逐轮进行。每轮先记录问题，再修改正文，然后重新检查本轮受影响的项目，才能进入下一轮。
-5. **渲染与检查**：生成 PDF，运行自动检查，并人工查看规定页面。自动检查只能补充第四轮，不能替代前四轮。
+5. **展示与检查**：按用户要求的格式检查成品。HTML 检查内容、链接和浏览器显示；仅在明确要求 PDF 时渲染并检查 PDF 页面。自动检查只能补充第四轮，不能替代前四轮。
 6. **交付**：只有复审记录中的必填项都有结论、发现的问题已经修改或明确列为限制，才能称为完成。
 
 在论文源文件旁创建 `<论文文件名>_review.md`，使用 [references/review-record-template.md](references/review-record-template.md) 的结构逐项填写。每一项必须填写以下三部分：
@@ -73,10 +77,14 @@ description: Turn a software, robotics, or embodied-AI project's repository evid
 
 ## 生成并复审成品
 
-写完初稿后按四轮顺序复审：事实与引用、初学者阅读连续性、方法和复现充分性、中文语言与 PDF 版式。完整清单见 [references/review-checklist.md](references/review-checklist.md)。每一轮都必须先在 review 文件中逐项填写，再根据记录修改论文；修改后回到同一轮复查。不能同时填写四轮，也不能让后面一轮掩盖前面尚未处理的问题。
+写完初稿后按四轮顺序复审：事实与引用、初学者阅读连续性、方法和复现充分性、中文语言与所选格式的版式。完整清单见 [references/review-checklist.md](references/review-checklist.md)。每一轮都必须先在 review 文件中逐项填写，再根据记录修改论文；修改后回到同一轮复查。不能同时填写四轮，也不能让后面一轮掩盖前面尚未处理的问题。
 
 语言复审要逐处检查“不是……而是……”“并非……而是……”“这意味着”“值得注意的是”等模板化连接。保留确有必要的逻辑对比，重写用于制造语气或重复结论的表达。避免一句一段、无明确指代的“前文/上述/该方法”、先使用后定义的缩写，以及连续罗列抽象名词。
 
-如果交付 HTML/PDF，使用 `scripts/audit_paper.py` 检查引用编号、模板化短语、研究者叙述视角候选段落、空白页、链接注释和 PDF 元数据。脚本的语言警告需要人工判断，不能用简单的零计数替代阅读全文。第四轮须按段落记录作者应承担的设计/解释动作与保留物体主语的理由；仍保留的候选段落用 `--voice-review` 提供逐项裁定并通过门禁，格式见叙述视角参考文件。渲染后至少抽查封面、目录或开篇、图表密集页、教程页、结果页和参考文献页。
+面向读者的正文只直接陈述实验对象、方法、证据、计算规则和适用范围，不加入“此地无银三百两”式的自证清白。删除“不是手改结果”“没有造假”“不是挑选最好案例”“没有偷偷改参数”“没有补造记录”等防御性声明。相关信息若确有方法学价值，改写成可核验的正面事实，例如“每个任务统一选取 episode0”“成功数由 50 份结果文件汇总”“实际 batch 为 64”。科学限制也优先写成适用范围或后续证据需求，例如“结论适用于这 50 类任务”“单因素贡献需要消融实验”。安全门禁、数据缺失和明确的排除条件仍应如实说明，但不得借此添加与读者判断无关的辩解。
 
-最终交付应包含源文件、PDF、已填写的 review 文件、自动检查结果、未解决限制和可点击文件路径。最终答复按四轮分别报告发现和修正，不得只给一个笼统的“review 通过”。不要擅自提交、发布或上传论文。
+第四轮复审必须专门搜索防御性自证措辞。发现后先判断它承载的是选择规则、证据来源、限制还是纯粹辩解，再用对应事实替换；纯粹辩解直接删除。不得仅换一个否定词保留原来的防御语气。
+
+交付 HTML 时，使用 `scripts/audit_paper.py` 检查引用编号、模板化短语和研究者叙述视角候选段落。仅当用户要求 PDF 时，额外传入 `--pdf` 检查空白页、链接注释和 PDF 元数据。脚本的语言警告需要人工判断，不能用简单的零计数替代阅读全文。第四轮须按段落记录作者应承担的设计/解释动作与保留物体主语的理由；仍保留的候选段落用 `--voice-review` 提供逐项裁定并通过门禁，格式见叙述视角参考文件。对所选格式抽查开篇、图表、教程、结果和参考文献等实际存在的内容；HTML 不要求纸张分页检查。
+
+最终交付应包含用户要求的成品格式、对应源文件、已填写的 review 文件、自动检查结果、未解决限制和可点击文件路径；PDF 仅在用户明确要求时包含。最终答复按四轮分别报告发现和修正，不得只给一个笼统的“review 通过”。不要擅自提交、发布或上传论文。

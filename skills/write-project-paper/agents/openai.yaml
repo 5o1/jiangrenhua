@@ -1,4 +1,4 @@
 interface:
   display_name: "项目论文写作"
-  short_description: "从项目证据生成初学者可读的中文论文并完成引用与 PDF 复审"
-  default_prompt: "使用 $write-project-paper 将当前项目进展整理为有真实引用、适合初学者阅读的中文论文，并输出经过复审的 PDF。"
+  short_description: "从项目证据生成初学者可读的中文论文，按所需格式完成引用与内容复审"
+  default_prompt: "使用 $write-project-paper 将当前项目进展整理为有真实引用、适合初学者阅读的中文论文，按项目约定或我指定的格式交付；仅在明确要求时生成 PDF。"

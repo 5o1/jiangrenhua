@@ -21,6 +21,27 @@ STYLE_PHRASES = (
     "这意味着",
 )
 
+DEFENSIVE_PHRASES = (
+    "不是手改",
+    "并非手改",
+    "没有手改",
+    "没有造假",
+    "并非造假",
+    "不是造假",
+    "不是挑选最好",
+    "并非挑选最好",
+    "没有挑选最好",
+    "没有偷偷改",
+    "并未偷偷改",
+    "没有补造",
+    "并未补造",
+    "不伪造",
+    "没有伪造",
+    "未伪造",
+    "没有篡改",
+    "未篡改",
+)
+
 AUTHORIAL_MARKERS = ("我们", "本研究", "本文")
 AGENCY_CUES = (
     "采用", "选择", "设计", "比较", "分析", "评估", "检验", "判断",
@@ -173,6 +194,7 @@ def audit_html(path: Path) -> tuple[dict[str, object], bool]:
     }
     text = visible_text(body)
     phrases = {phrase: text.count(phrase) for phrase in STYLE_PHRASES}
+    defensive_phrases = {phrase: text.count(phrase) for phrase in DEFENSIVE_PHRASES}
     external_links = re.findall(r'href=["\']https?://[^"\']+["\']', html, re.I)
     headings = [
         re.sub(r"<[^>]+>", "", title).strip()
@@ -190,10 +212,11 @@ def audit_html(path: Path) -> tuple[dict[str, object], bool]:
         "uncited_reference_entries": unused,
         "external_link_count": len(external_links),
         "style_phrase_counts": phrases,
+        "defensive_phrase_counts": defensive_phrases,
         "authorial_voice": audit_authorial_voice(html),
         "empty_table_cells": empty_cells,
     }
-    failed = bool(missing or unused or empty_cells)
+    failed = bool(missing or unused or empty_cells or any(defensive_phrases.values()))
     return result, failed
 
 
@@ -253,7 +276,7 @@ def main() -> int:
     else:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         print("\nResult:", "FAIL" if failed else "PASS")
-        print("Style and authorial-voice findings are review prompts, not automatic failures.")
+        print("Style and authorial-voice findings are review prompts; defensive self-justification is a failure.")
     return 1 if failed else 0
 
 
