@@ -64,6 +64,37 @@ class AuditPaperTests(unittest.TestCase):
         self.assertEqual(report["missing_reference_definitions"], [2])
         self.assertEqual(report["uncited_reference_entries"], [1])
 
+    def _audit_html_text(self, html: str) -> tuple[dict[str, object], bool]:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "paper.html"
+            path.write_text(html, encoding="utf-8")
+            return audit_paper.audit_html(path)
+
+    def test_unrendered_tex_is_failure(self) -> None:
+        report, failed = self._audit_html_text(
+            "<html><head></head><body><h2>方法</h2><p>当前关节角为 \\(q_{\\text{now}}\\)。</p>"
+            "<pre>\\(示例源码\\)</pre></body></html>"
+        )
+        self.assertTrue(failed)
+        self.assertEqual(report["math"]["unrendered_tex_delimiters"], 1)
+
+    def test_rendered_math_requires_new_computer_modern_marker(self) -> None:
+        body = "<body><p>角度 <mjx-container><svg></svg></mjx-container>。</p></body></html>"
+        report, failed = self._audit_html_text("<html><head></head>" + body)
+        self.assertTrue(failed)
+        self.assertFalse(report["math"]["math_font_ok"])
+        marker = '<meta name="math-renderer" content="MathJax 4.1.3 SVG; font mathjax-newcm">'
+        report, failed = self._audit_html_text("<html><head>" + marker + "</head>" + body)
+        self.assertFalse(failed)
+        self.assertEqual(report["math"]["rendered_formulas"], 1)
+
+    def test_hand_built_sub_sup_is_reported_not_failed(self) -> None:
+        report, failed = self._audit_html_text(
+            "<html><head></head><body><p>输入 <em>q</em><sub>now</sub>。</p></body></html>"
+        )
+        self.assertFalse(failed)
+        self.assertEqual(report["math"]["html_sub_sup_outside_formulas"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -75,6 +75,27 @@ description: Turn a software, robotics, or embodied-AI project's repository evid
 
 当架构、时序、数据流、状态迁移或多级失败条件难以用短段落说明时加入图。优先使用可复现的 HTML/SVG、表格或代码生成图；图片必须有图题，并在正文解释读者应该观察什么。图表只呈现有证据的数据，不用装饰性图像填充篇幅。
 
+距离、偏离、角度、坐标系、路径等几何量，先用示意图画出定义，再给公式：图中标出公式里出现的每个点、线段和符号，正文按图逐项说明。上界、近似或误差项的推导也应在图中标出被约束的量，读者能从图上看出“它约束的是哪一段距离”。
+
+## 数学公式
+
+正文中的公式和数学符号一律写成 TeX：行内用 `\( ... \)`，独立公式用 `\[ ... \]`。变量、下标、上标和运算式（例如 `\(q_{\text{now}}\)`、`\(B h^2/8\)`）都放进公式，不用 HTML 的 `<em>`、`<sub>`、`<sup>` 或 Unicode 上下标拼接，这样同一符号在全文中字形一致。普通数字和带单位的测量值（如 7.009 m/s²）仍写在正文中。
+
+公式字体统一为 **New Computer Modern Math**，即 TeX/LaTeX 默认的 Computer Modern 设计的 OpenType 版本。中文正文字体不受影响；公式中的中文用 `\text{}`。
+
+- HTML：保留含 TeX 的源文件（如 `paper.src.html`），用 `scripts/render_math.mjs` 预渲染为成品 `paper.html`。脚本使用 MathJax 4.1.3 与 `mathjax-newcm` 字体，把每个公式输出为内嵌 SVG，字形以路径写入页面，查看时不需要安装字体、联网或运行脚本；每个公式带有含 TeX 源码的 `aria-label`，页面头部写入 `math-renderer` 标记。首次使用前安装（不随 skill 分发，版本固定）：
+
+  ```bash
+  npm install --prefix ~/.cache/write-project-paper/mathjax \
+    @mathjax/src@4.1.3 @mathjax/mathjax-newcm-font@4.1.3
+  node scripts/render_math.mjs paper.src.html paper.html
+  ```
+
+  修改论文时只改源文件，再重新渲染；不要手改成品中的 SVG。TeX 有错误时脚本以非零状态退出并列出出错公式。
+- PDF（仅在用户要求时）：由 LaTeX 生成时使用 `unicode-math` 并 `\setmathfont{NewCMMath-Regular.otf}`；由浏览器打印 HTML 成品时，公式已是 SVG，无需额外设置。
+
+`scripts/audit_paper.py` 会把正文中残留的 `\(`、`\[`、`$$`（未渲染的 TeX）和缺少 New Computer Modern 标记的已渲染公式判为失败，并报告公式之外的 `<sub>`/`<sup>` 数量供第四轮复审逐处判断。
+
 ## 生成并复审成品
 
 写完初稿后按四轮顺序复审：事实与引用、初学者阅读连续性、方法和复现充分性、中文语言与所选格式的版式。完整清单见 [references/review-checklist.md](references/review-checklist.md)。每一轮都必须先在 review 文件中逐项填写，再根据记录修改论文；修改后回到同一轮复查。不能同时填写四轮，也不能让后面一轮掩盖前面尚未处理的问题。
@@ -85,6 +106,6 @@ description: Turn a software, robotics, or embodied-AI project's repository evid
 
 第四轮复审必须专门搜索防御性自证措辞。发现后先判断它承载的是选择规则、证据来源、限制还是纯粹辩解，再用对应事实替换；纯粹辩解直接删除。不得仅换一个否定词保留原来的防御语气。
 
-交付 HTML 时，使用 `scripts/audit_paper.py` 检查引用编号、模板化短语和研究者叙述视角候选段落。仅当用户要求 PDF 时，额外传入 `--pdf` 检查空白页、链接注释和 PDF 元数据。脚本的语言警告需要人工判断，不能用简单的零计数替代阅读全文。第四轮须按段落记录作者应承担的设计/解释动作与保留物体主语的理由；仍保留的候选段落用 `--voice-review` 提供逐项裁定并通过门禁，格式见叙述视角参考文件。对所选格式抽查开篇、图表、教程、结果和参考文献等实际存在的内容；HTML 不要求纸张分页检查。
+交付 HTML 时，使用 `scripts/audit_paper.py` 检查引用编号、模板化短语、公式渲染和研究者叙述视角候选段落。仅当用户要求 PDF 时，额外传入 `--pdf` 检查空白页、链接注释和 PDF 元数据。脚本的语言警告需要人工判断，不能用简单的零计数替代阅读全文。第四轮须按段落记录作者应承担的设计/解释动作与保留物体主语的理由；仍保留的候选段落用 `--voice-review` 提供逐项裁定并通过门禁，格式见叙述视角参考文件。对所选格式抽查开篇、图表、教程、结果和参考文献等实际存在的内容；HTML 不要求纸张分页检查。
 
 最终交付应包含用户要求的成品格式、对应源文件、已填写的 review 文件、自动检查结果、未解决限制和可点击文件路径；PDF 仅在用户明确要求时包含。最终答复按四轮分别报告发现和修正，不得只给一个笼统的“review 通过”。不要擅自提交、发布或上传论文。

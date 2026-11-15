@@ -70,6 +70,54 @@ class TextExtractor(HTMLParser):
             self.parts.append(data)
 
 
+MATH_FONT_MARKER = "mathjax-newcm"
+
+
+class ProseTextExtractor(HTMLParser):
+    """Visible prose outside code, preformatted text, scripts, styles and rendered formulas."""
+
+    SKIPPED = {"script", "style", "code", "pre", "textarea", "mjx-container"}
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+        self._ignored: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in self.SKIPPED:
+            self._ignored.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in self._ignored:
+            del self._ignored[len(self._ignored) - 1 - self._ignored[::-1].index(tag)]
+
+    def handle_data(self, data: str) -> None:
+        if not self._ignored:
+            self.parts.append(data)
+
+
+def audit_math(html: str) -> dict[str, object]:
+    """TeX left unrendered fails; hand-built sub/sup math and the renderer font are reported."""
+    parser = ProseTextExtractor()
+    parser.feed(html)
+    prose = " ".join(parser.parts)
+    unrendered = re.findall(r"\\\(|\\\[|\$\$", prose)
+    outside_math = re.sub(r"<mjx-container\b.*?</mjx-container>", "", html, flags=re.I | re.S)
+    outside_math = re.sub(r"<(pre|code)\b.*?</\1>", "", outside_math, flags=re.I | re.S)
+    markup = len(re.findall(r"<(?:sub|sup)\b", outside_math, re.I))
+    rendered = len(re.findall(r"<mjx-container\b", html, re.I))
+    marker = re.search(r'<meta[^>]*name=["\']math-renderer["\'][^>]*content=["\']([^"\']*)', html, re.I)
+    renderer = marker.group(1) if marker else None
+    font_ok = rendered == 0 or (renderer is not None and MATH_FONT_MARKER in renderer)
+    return {
+        "rendered_formulas": rendered,
+        "renderer": renderer,
+        "unrendered_tex_delimiters": len(unrendered),
+        "html_sub_sup_outside_formulas": markup,
+        "math_font_ok": font_ok,
+    }
+
+
 def visible_text(html: str) -> str:
     parser = TextExtractor()
     parser.feed(html)
@@ -201,6 +249,7 @@ def audit_html(path: Path) -> tuple[dict[str, object], bool]:
         for title in re.findall(r"<h[1-3][^>]*>(.*?)</h[1-3]>", html, re.I | re.S)
     ]
     empty_cells = len(re.findall(r"<(?:td|th)[^>]*>\s*</(?:td|th)>", html, re.I))
+    math = audit_math(html)
     missing = sorted(used - defined)
     unused = sorted(defined - used)
     result: dict[str, object] = {
@@ -215,8 +264,12 @@ def audit_html(path: Path) -> tuple[dict[str, object], bool]:
         "defensive_phrase_counts": defensive_phrases,
         "authorial_voice": audit_authorial_voice(html),
         "empty_table_cells": empty_cells,
+        "math": math,
     }
-    failed = bool(missing or unused or empty_cells or any(defensive_phrases.values()))
+    failed = bool(
+        missing or unused or empty_cells or any(defensive_phrases.values())
+        or math["unrendered_tex_delimiters"] or not math["math_font_ok"]
+    )
     return result, failed
 
 
